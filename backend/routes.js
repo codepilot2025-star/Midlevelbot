@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bot = require('./botLogic');
+const logger = require('./logger');
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.post('/chat', messageValidators, handleValidation, async (req, res) => {
     const reply = await bot.getBotResponse(message);
     res.json({ reply });
   } catch (err) {
-    console.error('Chat handler error:', err);
+    logger.error({ err }, 'Chat handler error');
     res.status(500).json({ error: 'Failed to process chat' });
   }
 });

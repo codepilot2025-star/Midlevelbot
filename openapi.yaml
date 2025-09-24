@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: MidLevelBot API
+  version: 0.1.0
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: ok
+  /api/chat:
+    post:
+      summary: Send a chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+              required: [message]
+      responses:
+        '200':
+          description: A reply from the bot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+        '400':
+          description: Validation error
+        '500':
+          description: Server error

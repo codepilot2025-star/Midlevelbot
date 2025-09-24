@@ -6,6 +6,9 @@
     "start": "node index.js",
     "start:prod": "NODE_ENV=production node index.js",
     "dev": "nodemon index.js",
+  "lint": "eslint . --ext .js",
+  "format": "prettier --write .",
+  "format:check": "prettier --check .",
     "test": "jest --colors"
   },
   "dependencies": {
@@ -15,12 +18,16 @@
     "express-rate-limit": "^8.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^7.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "pino": "^8.14.0",
+    "envalid": "^7.3.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^2.0.22",
     "supertest": "^6.3.4"
+    ,"eslint": "^8.46.0",
+    "prettier": "^2.8.8"
   },
   "jest": {
     "testEnvironment": "node",
