@@ -8,6 +8,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const logger = require('./logger');
 const routes = require('./routes');
+const docs = require('./docs');
 
 dotenv.config();
 
@@ -52,6 +53,9 @@ const apiLimiter = rateLimit({
 
 // API routes mounted at /api with rate limiting
 app.use('/api', apiLimiter, routes);
+
+// Mount API docs (Swagger UI)
+docs(app);
 
 // basic /metrics endpoint
 app.get('/metrics', (req, res) => {
