@@ -1,0 +1,58 @@
+body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background:#f6f7fb; margin:0; padding:20px; }
+
+/* Container sizing and responsive fallback */
+#chat { width: 100%; max-width:600px; margin:40px auto; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.08); padding:16px; display:flex; flex-direction:column; }
+
+/* Messages area */
+#messages, #chat-box { height:360px; overflow:auto; padding:12px; border:1px solid #eee; border-radius:6px; display:flex; flex-direction:column; gap:6px; background: #fff; }
+
+.message { padding:10px 12px; border-radius:12px; max-width:80%; align-self:flex-start; }
+.message.user { background:#007bff; color:#fff; align-self:flex-end; }
+.message.bot { background:#f1f1f1; color:#111; }
+
+/* Support the simpler layout the user provided */
+#chat-container { width: 400px; border: 1px solid #ccc; padding: 10px; font-family: Arial, sans-serif; margin: 0 auto; }
+
+#chat-box { height: 300px; border: 1px solid #999; overflow-y: auto; padding: 5px; margin-bottom: 5px; }
+
+.user { color: blue; }
+.bot { color: green; }
+
+#msgForm { display:flex; gap:8px; margin-top:12px; }
+#input { flex:1; padding:10px 12px; border-radius:8px; border:1px solid #ddd; }
+/* keep the user-provided input width but allow responsive scaling */
+#user-input { width: 70%; padding: 5px; }
+#send-btn { padding: 5px 10px; }
+
+button { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:#fff; }
+button[disabled] { opacity:0.6; cursor:not-allowed; }
+.visually-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+	#chat { max-width: 92%; margin: 20px auto; padding: 12px; }
+	#messages, #chat-box { height: 320px; padding: 10px; }
+	.message { padding: 8px 10px; border-radius:10px; }
+	button { padding: 10px 14px; }
+}
+
+@media (max-width: 480px) {
+	/* Make the chat take the full viewport width with safe padding */
+	body { padding: 12px; }
+	#chat { width: calc(100% - 24px); max-width: none; margin: 12px auto; padding: 10px; box-shadow: none; border-radius: 8px; }
+
+	/* Slightly shorter messages area to fit mobile view */
+	#messages, #chat-box { height: 220px; padding: 8px; }
+
+	/* Bigger tap targets */
+	#input, #user-input { font-size: 16px; padding: 12px; }
+	button, #send-btn { padding: 12px 14px; font-size: 16px; }
+
+	/* Let messages take almost full width */
+	.message { max-width: 95%; }
+
+	/* Stack form elements on very small screens */
+	#msgForm { flex-direction: column; gap: 8px; }
+	#input { width: 100%; }
+	#send-btn { width: 100%; }
+}
