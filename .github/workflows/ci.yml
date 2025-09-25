@@ -2,13 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   backend-tests:
-    name: Backend tests
+    name: Backend Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,7 +24,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies (backend)
+      - name: Install backend dependencies
         working-directory: backend
         run: npm ci
 
@@ -34,45 +34,11 @@ jobs:
           USE_OPENAI: false
           HUGGINGFACE_API_KEY: dummy
         run: npm test --silent
-name: CI
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+      - name: Lint backend code
+        working-directory: backend
+        run: npm run lint
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install backend deps
-      working-directory: backend
-      run: npm ci
-    - name: Lint
-      working-directory: backend
-      run: npm run lint
-    - name: Format check
-      working-directory: backend
-      run: npm run format:check
-
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install backend deps
-      working-directory: backend
-      run: npm ci
-    - name: Run tests
-      working-directory: backend
-      run: npm test --silent
+      - name: Check formatting
+        working-directory: backend
+        run: npm run format:check
