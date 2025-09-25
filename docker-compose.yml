@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: midlevel_redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: midlevel_backend
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - NODE_ENV=production
+    ports:
+      - '3000:3000'
+    depends_on:
+      - redis
+    restart: on-failure

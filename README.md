@@ -28,6 +28,27 @@ cd backend
 npm test
 ```
 
+CLI (interactive testing)
+
+You can run a simple interactive CLI to test the Hugging Face or OpenAI adapters.
+
+From the `backend` folder (uses backend/node_modules):
+
+```bash
+# Hugging Face mode
+npm run cli:hf
+
+# OpenAI mode
+npm run cli:openai
+```
+
+Or run directly from the backend folder:
+
+```bash
+node ../cli/chat-cli.js hf
+node ../cli/chat-cli.js openai
+```
+
 Files
 
 - `backend/` - Express backend
