@@ -1,69 +1,25 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+
 const readline = require('readline');
+require('dotenv').config();
 
-// dotenv optional
-try {
-  require('dotenv').config();
-} catch (e) {
-  // eslint-disable-next-line no-console
-  console.warn('dotenv not available — ensure env vars are exported if you rely on .env');
-}
+const { handleClaudeMessage } = require('../backend/botLogic'); // Ensure path is correct
+const { getHFResponse } = require('../backend/huggingFace');    // Hugging Face adapter
 
-// Load adapters (adapted to repo structure)
-let getHFResponse = null;
-let getOpenAIResponse = null;
-try {
-  ({ getHuggingFaceResponse: getHFResponse } = require(path.join(__dirname, '..', 'nlp', 'botHuggingFace')));
-} catch (e) {
-  // adapter optional
-}
-try {
-  ({ getOpenAIResponse } = require(path.join(__dirname, '..', 'nlp', 'botOpenAI')));
-} catch (e) {
-  // adapter optional
-}
+// Mode: 'hf' for Hugging Face testing, 'claude' for deployment or Claude bot
+const mode = process.argv[2] || 'hf';
 
-let mode = 'hf'; // safe default
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-// Load from bot.config.json (repo root) if available
-try {
-  const configPath = path.join(__dirname, '..', 'bot.config.json');
-  if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    if (config.mode) mode = config.mode;
-  }
-} catch (e) {
-  console.warn('⚠️ No bot.config.json found or it could not be parsed. Defaulting to Hugging Face.');
-}
+console.log(`\nStarting Chat CLI in mode: ${mode}\n(Type 'exit' to quit)\n`);
 
-// Allow CLI override: `node cli/chat-cli.js openai`
-const argMode = process.argv[2];
-if (argMode) {
-  if (argMode === 'openai' && !process.env.OPENAI_API_KEY) {
-    console.warn('⚠️ No OPENAI_API_KEY found. Staying in Hugging Face mode.');
-  } else {
-    mode = argMode;
-  }
-}
-
-// Ensure adapter exists for the chosen mode
-if (mode === 'openai' && typeof getOpenAIResponse !== 'function') {
-  console.warn('⚠️ OpenAI adapter not available. Falling back to Hugging Face.');
-  mode = 'hf';
-}
-if (mode === 'hf' && typeof getHFResponse !== 'function') {
-  console.warn('⚠️ Hugging Face adapter not available. Some features may be limited.');
-}
-
-console.log(`💬 Running CLI in mode: ${mode.toUpperCase()}`);
-
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-function ask() {
+async function ask() {
   rl.question('You: ', async (input) => {
     if (input.toLowerCase() === 'exit') {
+      console.log('Exiting chat...');
       rl.close();
       return;
     }
@@ -72,12 +28,14 @@ function ask() {
     try {
       if (mode === 'hf') {
         reply = await getHFResponse(input);
+      } else if (mode === 'claude') {
+        reply = await handleClaudeMessage(input);
       } else {
-        reply = await getOpenAIResponse(input);
+        reply = "Unknown mode. Use 'hf' or 'claude'.";
       }
     } catch (err) {
-      console.error('Error:', err && err.message ? err.message : err);
-      reply = '(error)';
+      console.error('Error getting bot response:', err.message);
+      reply = "Oops! Something went wrong with the bot.";
     }
 
     console.log(`Bot: ${reply}\n`);
