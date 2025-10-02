@@ -9,7 +9,6 @@
     "cli:hf": "node ../cli/chat-cli.js hf",
     "cli:openai": "node ../cli/chat-cli.js openai",
     "run:tasks": "node ../scripts/run_tasks.js",
-    "install:legacy": "npm install --legacy-peer-deps",
     "lint": "eslint . --ext .js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

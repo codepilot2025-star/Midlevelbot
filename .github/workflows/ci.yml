@@ -25,21 +25,21 @@ jobs:
           cache: 'npm'
 
       - name: Install backend dependencies
-        working-directory: backend
-        # Use legacy peer deps to avoid known peer conflicts (ioredis vs ioredis-mock)
-        run: npm ci --legacy-peer-deps
+        working-directory: .
+        # Install dependencies at repository root
+        run: npm ci
 
       - name: Run backend tests
-        working-directory: backend
+        working-directory: .
         env:
           USE_OPENAI: false
           HUGGINGFACE_API_KEY: dummy
         run: npm test --silent
 
       - name: Lint backend code
-        working-directory: backend
+        working-directory: .
         run: npm run lint
 
       - name: Check formatting
-        working-directory: backend
+        working-directory: .
         run: npm run format:check

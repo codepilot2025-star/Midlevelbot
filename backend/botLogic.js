@@ -1,19 +1,75 @@
 // Centralized sync response generator (used by both sync and async exports)
 const logger = require('./logger');
-const { getCopilotResponse } = require('../nlp/botCopilot');
-const { getClaudeResponse } = require('../nlp/botClaude');
+// Make adapters optional so the bot is resilient when provider modules are absent in test/dev
+let getCopilotResponse;
+try {
+  ({ getCopilotResponse } = require('../nlp/botCopilot'));
+} catch (e) {
+  getCopilotResponse = null;
+}
+let getClaudeResponse;
+try {
+  ({ getClaudeResponse } = require('../nlp/botClaude'));
+} catch (e) {
+  getClaudeResponse = null;
+}
 let getHuggingFaceResponse;
 try {
-  // optional adapter; may throw if not installed or present
   ({ getHuggingFaceResponse } = require('../nlp/botHuggingFace'));
 } catch (e) {
-  // adapter not available — that's fine for tests/local dev
+  getHuggingFaceResponse = null;
 }
 let getOpenAIResponse;
 try {
   ({ getOpenAIResponse } = require('../nlp/botOpenAI'));
 } catch (e) {
-  // optional
+  getOpenAIResponse = null;
+}
+
+// Small in-memory cache for computeResponse to avoid repeated CPU work for identical short-lived queries
+const CACHE_TTL_MS = parseInt(process.env.BOT_RESPONSE_CACHE_TTL_MS || '30000', 10); // 30s default
+const responseCache = new Map();
+function getCachedResponse(key) {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.value;
+}
+function setCachedResponse(key, value) {
+  try {
+    responseCache.set(key, { value, expiry: Date.now() + CACHE_TTL_MS });
+  } catch (e) {
+    // ignore cache set failures
+  }
+}
+
+// Adapter call timeout wrapper to avoid hanging on slow network providers
+const ADAPTER_TIMEOUT_MS = parseInt(process.env.ADAPTER_TIMEOUT_MS || '5000', 10);
+function callWithTimeout(fn) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      settled = true;
+      reject(new Error('adapter timeout'));
+    }, ADAPTER_TIMEOUT_MS);
+    Promise.resolve()
+      .then(() => fn())
+      .then((r) => {
+        if (!settled) {
+          clearTimeout(timer);
+          resolve(r);
+        }
+      })
+      .catch((err) => {
+        if (!settled) {
+          clearTimeout(timer);
+          reject(err);
+        }
+      });
+  });
 }
 
 // Circuit store abstraction (redis-backed when REDIS_URL set)
@@ -102,7 +158,8 @@ exports.getBotResponse = async (message) => {
       try {
         const modelLabel = process.env.COPILOT_MODEL || 'default';
         if (metrics && metrics.adapterLatency) stop = metrics.adapterLatency.startTimer({ adapter: 'copilot', model: modelLabel });
-        const r = await getCopilotResponse(message);
+        if (!getCopilotResponse) throw new Error('copilot adapter not available');
+        const r = await callWithTimeout(() => getCopilotResponse(message));
         if (stop) stop();
         return r;
       } catch (err) {
@@ -163,7 +220,8 @@ exports.getBotResponse = async (message) => {
         try {
           const modelLabel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
           if (metricsAi && metricsAi.adapterLatency) stopAi = metricsAi.adapterLatency.startTimer({ adapter: 'openai', model: modelLabel });
-          const resp = await getOpenAIResponse(message);
+          if (!getOpenAIResponse) throw new Error('openai adapter not available');
+          const resp = await callWithTimeout(() => getOpenAIResponse(message));
           if (stopAi) stopAi();
           // on success prune old failures
           const now = Date.now();
@@ -236,7 +294,8 @@ exports.getBotResponse = async (message) => {
       try {
         const modelLabel = process.env.HUGGINGFACE_MODEL || 'facebook/blenderbot-400M-distill';
         if (metricsHf && metricsHf.adapterLatency) stopHf = metricsHf.adapterLatency.startTimer({ adapter: 'huggingface', model: modelLabel });
-        const r = await getHuggingFaceResponse(message);
+        if (!getHuggingFaceResponse) throw new Error('huggingface adapter not available');
+        const r = await callWithTimeout(() => getHuggingFaceResponse(message));
         if (stopHf) stopHf();
         return r;
       } catch (err) {
@@ -248,18 +307,28 @@ exports.getBotResponse = async (message) => {
     }
 
     // Otherwise use Claude for conversational responses (instrumented)
+    // Use cached computeResponse as a fast and reliable fallback for short messages
+    const cacheKey = `compute:${String(message || '')}`;
+    const cached = getCachedResponse(cacheKey);
+    if (cached) return cached;
+
     const metricsCl = ensureMetrics();
     let stopCl;
     try {
       const modelLabel = process.env.CLAUDE_MODEL || 'default';
       if (metricsCl && metricsCl.adapterLatency) stopCl = metricsCl.adapterLatency.startTimer({ adapter: 'claude', model: modelLabel });
-      const r = await getClaudeResponse(message);
+      if (!getClaudeResponse) throw new Error('claude adapter not available');
+      const r = await callWithTimeout(() => getClaudeResponse(message));
       if (stopCl) stopCl();
+      setCachedResponse(cacheKey, r);
       return r;
     } catch (err) {
       if (stopCl) stopCl();
       const modelLabel = process.env.CLAUDE_MODEL || 'default';
       if (metricsCl && metricsCl.adapterErrors) metricsCl.adapterErrors.inc({ adapter: 'claude', model: modelLabel });
+      // fallback to computeResponse and cache result
+      const fallback = computeResponse(message);
+      setCachedResponse(cacheKey, fallback);
       throw err;
     }
   } catch (err) {
