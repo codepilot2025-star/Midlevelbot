@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "ioredis-mock": "^6.9.3",
     "nodemon": "^2.0.22",
     "supertest": "^6.3.4",
     "eslint": "^8.46.0",
