@@ -60,8 +60,13 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        # Install dependencies in backend where package.json lives
-        run: npm ci
+        # Prefer clean install with lockfile, but fall back to regular install if lockfile is missing
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: Run backend tests
         working-directory: backend
