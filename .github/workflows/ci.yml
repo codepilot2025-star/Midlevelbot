@@ -24,6 +24,26 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Debug runner environment
+        run: |
+          echo "--- GITHUB_WORKSPACE ---"
+          echo "$GITHUB_WORKSPACE"
+          echo "--- PWD ---"
+          pwd
+          echo "--- list root ---"
+          ls -la
+          echo "--- list backend ---"
+          ls -la backend || true
+          echo "--- node/npm versions ---"
+          node --version || true
+          npm --version || true
+          echo "--- backend/package.json ---"
+          if [ -f backend/package.json ]; then
+            sed -n '1,200p' backend/package.json
+          else
+            echo "backend/package.json not found"
+          fi
+
       - name: Install backend dependencies
         working-directory: backend
         # Install dependencies in backend where package.json lives
