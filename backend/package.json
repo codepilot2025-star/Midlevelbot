@@ -42,5 +42,10 @@
     "roots": [
       "<rootDir>"
     ]
-  }
+  },
+  "description": "This folder contains the backend for the Midlevelbot project.",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }
