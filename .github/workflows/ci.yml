@@ -25,42 +25,62 @@ jobs:
           cache: 'npm'
 
       - name: Install backend dependencies
-        working-directory: .
-        # Install dependencies at repository root
+        working-directory: backend
+        # Install dependencies in backend where package.json lives
         run: npm ci
 
       - name: Run backend tests
-        working-directory: .
+        working-directory: backend
         env:
           USE_OPENAI: false
           HUGGINGFACE_API_KEY: dummy
         run: npm test --silent
 
       - name: Lint backend code
-        working-directory: .
+        working-directory: backend
         run: npm run lint
 
       - name: Check formatting
-        working-directory: .
+        working-directory: backend
         run: npm run format:check
 
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-latest
     needs: backend-tests
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      - name: Start services with docker-compose
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Wait for Redis
         run: |
-          docker-compose up -d redis
-          # build backend image and run it linked to redis
-          docker build -t midlevel_backend -f Dockerfile .
-          docker run -d --name midlevel_backend --env REDIS_URL=redis://redis:6379/0 -p 3000:3000 --link midlevel_redis:redis midlevel_backend
+          for i in $(seq 1 30); do
+            if nc -z localhost 6379 >/dev/null 2>&1; then
+              echo "redis ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "redis not ready"; exit 1
+
+      - name: Start backend in background
+        working-directory: backend
+        run: |
+          REDIS_URL=redis://localhost:6379/0 NODE_ENV=production npm run start &
+          echo $! > /tmp/backend.pid
 
       - name: Wait for backend ready
         run: |
@@ -73,14 +93,16 @@ jobs:
           echo "backend not ready"; exit 1
 
       - name: Run tests against stack
+        working-directory: backend
         env:
           USE_OPENAI: false
           HUGGINGFACE_API_KEY: dummy
         run: npm test --silent
 
-      - name: Tear down
+      - name: Tear down backend
         if: always()
         run: |
-          docker stop midlevel_backend || true
-          docker rm midlevel_backend || true
-          docker-compose down || true
+          if [ -f /tmp/backend.pid ]; then
+            kill $(cat /tmp/backend.pid) || true
+            rm /tmp/backend.pid || true
+          fi
