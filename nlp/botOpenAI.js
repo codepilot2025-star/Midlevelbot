@@ -11,7 +11,7 @@ try {
   hasSdk = false;
 }
 
-const fetch = global.fetch || require('node-fetch');
+const fetch = require('../backend/fetch');
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

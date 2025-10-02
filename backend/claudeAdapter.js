@@ -1,33 +1,41 @@
+// backend/claudeAdapter.js
+
 require('dotenv').config();
-const fetch = require('node-fetch');
+const fetch = require('./fetch');
+
+// Replace this with the actual Claude API endpoint if different
+const CLAUDE_API_URL = process.env.CLAUDE_API_URL;
+const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 
 async function getClaudeResponse(userMessage, history = []) {
-    const API_URL = 'https://api.anthropic.com/v1/complete'; // Claude endpoint
-    const API_KEY = process.env.CLAUDE_API_KEY;
+    // Build conversation array including past messages
+    const conversation = [
+        ...history,
+        { role: 'user', content: userMessage }
+    ];
 
-    // Build prompt with history for context
-    const prompt = history
-        .map((msg) => `${msg.role}: ${msg.content}`)
-        .join('\n') + `\nuser: ${userMessage}\nassistant:`;
+    try {
+        const res = await fetch(CLAUDE_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${CLAUDE_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ conversation })
+        });
 
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({
-            model: 'claude-v1', // or 'claude-instant-v1' depending on your access
-            prompt: prompt,
-            max_tokens_to_sample: 500,
-            stop_sequences: ['\nuser:']
-        })
-    });
+        const data = await res.json();
 
-    const data = await response.json();
+        const botReply = data.reply || "Claude did not return a response";
 
-    // Return the assistant's text
-    return data?.completion || "No response from Claude";
+        // Update conversation history
+        conversation.push({ role: 'assistant', content: botReply });
+
+        return { response: botReply, history: conversation };
+    } catch (err) {
+        console.error("Claude adapter error:", err);
+        return { response: "Error connecting to Claude", history: conversation };
+    }
 }
 
 module.exports = { getClaudeResponse };

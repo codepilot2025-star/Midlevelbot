@@ -1,4 +1,3 @@
-const path = require('path');
 
 describe('Hugging Face routing', () => {
   const origEnv = { ...process.env };

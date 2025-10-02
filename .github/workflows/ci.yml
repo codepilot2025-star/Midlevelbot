@@ -2,13 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   backend-tests:
-    name: Backend tests
+    name: Backend Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,55 +24,63 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies (backend)
-        working-directory: backend
+      - name: Install backend dependencies
+        working-directory: .
+        # Install dependencies at repository root
         run: npm ci
 
       - name: Run backend tests
-        working-directory: backend
+        working-directory: .
         env:
           USE_OPENAI: false
           HUGGINGFACE_API_KEY: dummy
         run: npm test --silent
-name: CI
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+      - name: Lint backend code
+        working-directory: .
+        run: npm run lint
 
-jobs:
-  lint:
+      - name: Check formatting
+        working-directory: .
+        run: npm run format:check
+
+  e2e:
+    name: End-to-end tests
     runs-on: ubuntu-latest
+    needs: backend-tests
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install backend deps
-      working-directory: backend
-      run: npm ci
-    - name: Lint
-      working-directory: backend
-      run: npm run lint
-    - name: Format check
-      working-directory: backend
-      run: npm run format:check
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  test:
-    runs-on: ubuntu-latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install backend deps
-      working-directory: backend
-      run: npm ci
-    - name: Run tests
-      working-directory: backend
-      run: npm test --silent
+      - name: Start services with docker-compose
+        run: |
+          docker-compose up -d redis
+          # build backend image and run it linked to redis
+          docker build -t midlevel_backend -f Dockerfile .
+          docker run -d --name midlevel_backend --env REDIS_URL=redis://redis:6379/0 -p 3000:3000 --link midlevel_redis:redis midlevel_backend
+
+      - name: Wait for backend ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sSf http://localhost:3000/ready >/dev/null 2>&1; then
+              echo "backend ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "backend not ready"; exit 1
+
+      - name: Run tests against stack
+        env:
+          USE_OPENAI: false
+          HUGGINGFACE_API_KEY: dummy
+        run: npm test --silent
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker stop midlevel_backend || true
+          docker rm midlevel_backend || true
+          docker-compose down || true

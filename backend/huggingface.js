@@ -2,7 +2,7 @@
 
 
 require('dotenv').config();
-const fetch = require('node-fetch');
+const fetch = require('./fetch');
 
 async function getHFResponse(userMessage) {
     const messages = [

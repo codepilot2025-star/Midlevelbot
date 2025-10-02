@@ -1,0 +1,56 @@
+[2025-10-02T14:29:53.993Z] Task: Test CLI conversation flows | Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+    at callHfApi (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getHuggingFaceResponse (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:85:14)
+    at async askClaude (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:34:26)
+    at async runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:57:9)
+[2025-10-02T14:29:53.994Z] Task: Test CLI conversation flows | Error: OPENAI_API_KEY not set
+Error: OPENAI_API_KEY not set
+    at getOpenAIResponseWithFetch (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:57:19)
+    at getOpenAIResponse (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:111:10)
+    at executeCopilot (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:45:32)
+    at runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:58:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-10-02T14:29:54.928Z] Task: Integrate frontend chat widget | Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+    at callHfApi (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getHuggingFaceResponse (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:85:14)
+    at async askClaude (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:34:26)
+    at async runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:57:9)
+[2025-10-02T14:29:54.929Z] Task: Integrate frontend chat widget | Error: OPENAI_API_KEY not set
+Error: OPENAI_API_KEY not set
+    at getOpenAIResponseWithFetch (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:57:19)
+    at getOpenAIResponse (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:111:10)
+    at executeCopilot (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:45:32)
+    at runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:58:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-10-02T14:29:55.840Z] Task: Verify API fallback logic | Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+    at callHfApi (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getHuggingFaceResponse (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:85:14)
+    at async askClaude (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:34:26)
+    at async runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:57:9)
+[2025-10-02T14:29:55.842Z] Task: Verify API fallback logic | Error: OPENAI_API_KEY not set
+Error: OPENAI_API_KEY not set
+    at getOpenAIResponseWithFetch (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:57:19)
+    at getOpenAIResponse (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:111:10)
+    at executeCopilot (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:45:32)
+    at runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:58:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-10-02T14:29:56.747Z] Task: Deploy bot to test server | Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+Error: Hugging Face API error: 401 {"error":"Invalid credentials in Authorization header"}
+    at callHfApi (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getHuggingFaceResponse (/Users/jeffward/Midlevelbot/nlp/botHuggingFace.js:85:14)
+    at async askClaude (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:34:26)
+    at async runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:57:9)
+[2025-10-02T14:29:56.748Z] Task: Deploy bot to test server | Error: OPENAI_API_KEY not set
+Error: OPENAI_API_KEY not set
+    at getOpenAIResponseWithFetch (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:57:19)
+    at getOpenAIResponse (/Users/jeffward/Midlevelbot/nlp/botOpenAI.js:111:10)
+    at executeCopilot (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:45:32)
+    at runTasks (/Users/jeffward/Midlevelbot/scripts/run_tasks.js:58:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
