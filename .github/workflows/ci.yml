@@ -26,7 +26,8 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci
+        # Use legacy peer deps to avoid known peer conflicts (ioredis vs ioredis-mock)
+        run: npm ci --legacy-peer-deps
 
       - name: Run backend tests
         working-directory: backend
