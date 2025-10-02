@@ -1,9 +1,11 @@
 // Force using a fake REDIS_URL so the circuit initializer will try to load ioredis.
-// We'll mock ioredis with ioredis-mock before requiring the circuit module.
 process.env.REDIS_URL = 'redis://localhost:6379/0';
 
-// Mock ioredis to use the in-memory ioredis-mock implementation and mark it virtual
-jest.mock('ioredis', () => require('ioredis-mock'), { virtual: true });
+// Mock ioredis to use our in-repo stub before requiring the circuit module.
+jest.mock('ioredis', () => {
+    const IORedisStub = require('../test-helpers/ioredis-stub');
+    return IORedisStub;
+}, { virtual: true });
 
 const circuit = require('../circuit');
 

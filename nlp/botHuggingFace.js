@@ -1,7 +1,7 @@
 // botHuggingFace.js
 // Robust Hugging Face Inference API adapter with timeout and retries
 
-const fetch = global.fetch || require('node-fetch');
+const fetch = require('../backend/fetch');
 
 const DEFAULT_MODEL = process.env.HUGGINGFACE_MODEL || 'facebook/blenderbot-400M-distill';
 

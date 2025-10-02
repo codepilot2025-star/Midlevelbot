@@ -7,8 +7,12 @@ try {
     // safe local fallback
     getHFResponse = async (msg) => `LOCAL-HF-FALLBACK: ${String(msg).slice(0, 120)}`;
 }
-// If no Hugging Face API key is present, force local fallback to avoid 401s
-if (!process.env.HUGGINGFACE_API_KEY) {
+// Decide whether to perform live network calls. CLI flag --live or env LIVE=true enables live mode.
+const argv = process.argv.slice(2);
+const LIVE_FLAG = String(process.env.LIVE || '').toLowerCase() === 'true' || argv.includes('--live');
+
+// If no Hugging Face API key is present or we're not in live mode, force local fallback to avoid 401s
+if (!LIVE_FLAG || !process.env.HUGGINGFACE_API_KEY) {
     getHFResponse = async (msg) => `LOCAL-HF-FALLBACK: ${String(msg).slice(0, 120)}`;
 }
 
@@ -18,9 +22,28 @@ try {
 } catch (e) {
     getOpenAIResponse = async (msg) => `LOCAL-OPENAI-FALLBACK: ${String(msg).slice(0, 120)}`;
 }
-// If no OpenAI key is set, use local fallback (prevents accidental network calls)
-if (!process.env.OPENAI_API_KEY) {
+// If no OpenAI key is set or we're not in live mode, use local fallback (prevents accidental network calls)
+if (!LIVE_FLAG || !process.env.OPENAI_API_KEY) {
     getOpenAIResponse = async (msg) => `LOCAL-OPENAI-FALLBACK: ${String(msg).slice(0, 120)}`;
+}
+
+if (!LIVE_FLAG) {
+    console.log('run_tasks: running in SAFE mode (no external API calls). Use --live or LIVE=true to enable live calls.');
+}
+
+// If live mode is requested, require an interactive confirmation from the user before making live API calls.
+async function confirmLive() {
+    if (!LIVE_FLAG) return false;
+    // If running non-interactively (CI), do not confirm and treat as false unless explicit env ALLOW_LIVE_IN_CI
+    if (process.env.CI && String(process.env.ALLOW_LIVE_IN_CI || '').toLowerCase() !== 'true') {
+        console.warn('LIVE mode requested but running in CI or non-interactive environment; skipping live calls.');
+        return false;
+    }
+    // Interactive prompt
+    const readline = require('readline');
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const answer = await new Promise((resolve) => rl.question('You requested LIVE mode. Proceed with live API calls? (y/N): ', (a) => { rl.close(); resolve(a); }));
+    return String(answer || '').toLowerCase().startsWith('y');
 }
 
 const taskList = [

@@ -1,7 +1,7 @@
 // backend/claudeAdapter.js
 
 require('dotenv').config();
-const fetch = global.fetch || require('node-fetch');
+const fetch = require('./fetch');
 
 // Replace this with the actual Claude API endpoint if different
 const CLAUDE_API_URL = process.env.CLAUDE_API_URL;
