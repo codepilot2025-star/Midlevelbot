@@ -140,6 +140,7 @@ app.get('/ready', async (req, res) => {
 app.use('/api/*', (req, res) => res.status(404).json({ error: 'Not found' }));
 
 // Centralized error handler
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   logger.error({ err }, 'Unhandled error');
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });

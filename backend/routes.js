@@ -1,8 +1,6 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bot = require('./botLogic');
-const { getCopilotResponse } = require('../nlp/botCopilot');
-const { getClaudeResponse } = require('../nlp/botClaude');
 const logger = require('./logger');
 
 const router = express.Router();

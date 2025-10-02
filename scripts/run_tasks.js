@@ -7,11 +7,19 @@ try {
     // safe local fallback
     getHFResponse = async (msg) => `LOCAL-HF-FALLBACK: ${String(msg).slice(0, 120)}`;
 }
+// If no Hugging Face API key is present, force local fallback to avoid 401s
+if (!process.env.HUGGINGFACE_API_KEY) {
+    getHFResponse = async (msg) => `LOCAL-HF-FALLBACK: ${String(msg).slice(0, 120)}`;
+}
 
 let getOpenAIResponse;
 try {
     ({ getOpenAIResponse } = require('../nlp/botOpenAI'));
 } catch (e) {
+    getOpenAIResponse = async (msg) => `LOCAL-OPENAI-FALLBACK: ${String(msg).slice(0, 120)}`;
+}
+// If no OpenAI key is set, use local fallback (prevents accidental network calls)
+if (!process.env.OPENAI_API_KEY) {
     getOpenAIResponse = async (msg) => `LOCAL-OPENAI-FALLBACK: ${String(msg).slice(0, 120)}`;
 }
 

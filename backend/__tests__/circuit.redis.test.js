@@ -1,5 +1,3 @@
-const path = require('path');
-
 // Force using a fake REDIS_URL so the circuit initializer will try to load ioredis.
 // We'll mock ioredis with ioredis-mock before requiring the circuit module.
 process.env.REDIS_URL = 'redis://localhost:6379/0';
