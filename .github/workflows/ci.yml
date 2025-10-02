@@ -18,6 +18,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug environment
+        run: |
+          echo "=== Debug: Runner PWD ==="
+          pwd
+          echo "\n=== Debug: Root ls ==="
+          ls -la
+          echo "\n=== Debug: backend ls ==="
+          ls -la backend || true
+          echo "\n=== Debug: node/npm versions ==="
+          node --version || true
+          npm --version || true
+          echo "\n=== Debug: head of backend/package.json ==="
+          sed -n '1,200p' backend/package.json || true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
