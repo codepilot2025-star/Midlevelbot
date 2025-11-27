@@ -1,0 +1,49 @@
+name: CI - Tests & E2E
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Backend + Frontend + E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Backend - install
+        run: npm --prefix backend ci
+
+      - name: Backend - run tests
+        run: |
+          mkdir -p backend/reports || true
+          # ensure test reporter can write
+          JEST_JUNIT_OUTPUT=backend/reports/junit.xml npm --prefix backend test --silent
+
+      - name: Frontend - install & test
+        run: |
+          npm --prefix frontend ci || true
+          npm --prefix frontend test || true
+
+      - name: Run e2e orchestration
+        env:
+          CI: true
+        run: |
+          # e2e.sh will attempt docker-compose; if runner provides Docker it will run full stack
+          bash ./scripts/e2e.sh
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-reports
+          path: |
+            backend/reports/junit.xml
+            reports/**
