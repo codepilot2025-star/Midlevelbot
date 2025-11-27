@@ -1,4 +1,3 @@
-
 describe('Hugging Face routing', () => {
   const origEnv = { ...process.env };
   afterEach(() => {

@@ -12,7 +12,8 @@
     "lint": "eslint . --ext .js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "USE_OPENAI=false HUGGINGFACE_API_KEY=dummy jest --colors"
+    "test": "USE_OPENAI=false HUGGINGFACE_API_KEY=dummy jest --colors",
+    "load-test": "k6 run ../scripts/load-test.k6.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

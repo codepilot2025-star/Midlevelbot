@@ -94,13 +94,33 @@ function ensureMetrics() {
   // create metrics only once on the global registry
   if (!global.__openai_metrics) {
     global.__openai_metrics = {
-      cbOpen: new promClient.Gauge({ name: 'openai_cb_open', help: '1 if OpenAI circuit is open, 0 otherwise' }),
-      cbFailures: new promClient.Gauge({ name: 'openai_cb_failures', help: 'Number of failures in window' }),
-      cbOpenedCount: new promClient.Gauge({ name: 'openai_cb_opened_count', help: 'Number of times circuit opened' }),
-      cbLastOpened: new promClient.Gauge({ name: 'openai_cb_last_opened_ts', help: 'Last time circuit opened (unix seconds)' }),
+      cbOpen: new promClient.Gauge({
+        name: 'openai_cb_open',
+        help: '1 if OpenAI circuit is open, 0 otherwise',
+      }),
+      cbFailures: new promClient.Gauge({
+        name: 'openai_cb_failures',
+        help: 'Number of failures in window',
+      }),
+      cbOpenedCount: new promClient.Gauge({
+        name: 'openai_cb_opened_count',
+        help: 'Number of times circuit opened',
+      }),
+      cbLastOpened: new promClient.Gauge({
+        name: 'openai_cb_last_opened_ts',
+        help: 'Last time circuit opened (unix seconds)',
+      }),
       // model-level metrics: include adapter and model labels
-      adapterLatency: new promClient.Histogram({ name: 'nlp_adapter_latency_seconds', help: 'Latency of NLP adapter calls in seconds', labelNames: ['adapter', 'model'] }),
-      adapterErrors: new promClient.Counter({ name: 'nlp_adapter_errors_total', help: 'Total errors from NLP adapters', labelNames: ['adapter', 'model'] }),
+      adapterLatency: new promClient.Histogram({
+        name: 'nlp_adapter_latency_seconds',
+        help: 'Latency of NLP adapter calls in seconds',
+        labelNames: ['adapter', 'model'],
+      }),
+      adapterErrors: new promClient.Counter({
+        name: 'nlp_adapter_errors_total',
+        help: 'Total errors from NLP adapters',
+        labelNames: ['adapter', 'model'],
+      }),
     };
   }
   return global.__openai_metrics;
@@ -157,7 +177,8 @@ exports.getBotResponse = async (message) => {
       let stop;
       try {
         const modelLabel = process.env.COPILOT_MODEL || 'default';
-        if (metrics && metrics.adapterLatency) stop = metrics.adapterLatency.startTimer({ adapter: 'copilot', model: modelLabel });
+        if (metrics && metrics.adapterLatency)
+          stop = metrics.adapterLatency.startTimer({ adapter: 'copilot', model: modelLabel });
         if (!getCopilotResponse) throw new Error('copilot adapter not available');
         const r = await callWithTimeout(() => getCopilotResponse(message));
         if (stop) stop();
@@ -165,13 +186,17 @@ exports.getBotResponse = async (message) => {
       } catch (err) {
         if (stop) stop();
         const modelLabel = process.env.COPILOT_MODEL || 'default';
-        if (metrics && metrics.adapterErrors) metrics.adapterErrors.inc({ adapter: 'copilot', model: modelLabel });
+        if (metrics && metrics.adapterErrors)
+          metrics.adapterErrors.inc({ adapter: 'copilot', model: modelLabel });
         throw err;
       }
     }
 
     // Prefer OpenAI if enabled
-    if (String(process.env.USE_OPENAI || '').toLowerCase() === 'true' && typeof getOpenAIResponse === 'function') {
+    if (
+      String(process.env.USE_OPENAI || '').toLowerCase() === 'true' &&
+      typeof getOpenAIResponse === 'function'
+    ) {
       // Circuit-breaker parameters (in-memory)
       const CB_THRESHOLD = parseInt(process.env.OPENAI_CB_THRESHOLD || '5', 10);
       const CB_WINDOW_MS = parseInt(process.env.OPENAI_CB_WINDOW_MS || '60000', 10);
@@ -203,7 +228,13 @@ exports.getBotResponse = async (message) => {
         metrics.cbOpen.set(isOpen);
         metrics.cbFailures.set(cb.failures.length || 0);
         metrics.cbOpenedCount.set(cb.openedCount || 0);
-        metrics.cbLastOpened.set(cb.openedCount ? Math.floor((cb.openUntil - (parseInt(process.env.OPENAI_CB_COOLDOWN_MS || '60000', 10))) / 1000) : 0);
+        metrics.cbLastOpened.set(
+          cb.openedCount
+            ? Math.floor(
+                (cb.openUntil - parseInt(process.env.OPENAI_CB_COOLDOWN_MS || '60000', 10)) / 1000
+              )
+            : 0
+        );
       }
 
       // If circuit is open, short-circuit to fallback
@@ -219,7 +250,8 @@ exports.getBotResponse = async (message) => {
         let stopAi;
         try {
           const modelLabel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
-          if (metricsAi && metricsAi.adapterLatency) stopAi = metricsAi.adapterLatency.startTimer({ adapter: 'openai', model: modelLabel });
+          if (metricsAi && metricsAi.adapterLatency)
+            stopAi = metricsAi.adapterLatency.startTimer({ adapter: 'openai', model: modelLabel });
           if (!getOpenAIResponse) throw new Error('openai adapter not available');
           const resp = await callWithTimeout(() => getOpenAIResponse(message));
           if (stopAi) stopAi();
@@ -230,7 +262,8 @@ exports.getBotResponse = async (message) => {
         } catch (err) {
           if (stopAi) stopAi();
           const modelLabel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
-          if (metricsAi && metricsAi.adapterErrors) metricsAi.adapterErrors.inc({ adapter: 'openai', model: modelLabel });
+          if (metricsAi && metricsAi.adapterErrors)
+            metricsAi.adapterErrors.inc({ adapter: 'openai', model: modelLabel });
           throw err;
         }
       } catch (err) {
@@ -247,7 +280,9 @@ exports.getBotResponse = async (message) => {
             if (cb.failures.length >= CB_THRESHOLD) {
               cb.openUntil = Date.now() + CB_COOLDOWN_MS;
               cb.openedCount = (cb.openedCount || 0) + 1;
-              logger.warn('OpenAI circuit opened (in-memory fallback)', { openedCount: cb.openedCount });
+              logger.warn('OpenAI circuit opened (in-memory fallback)', {
+                openedCount: cb.openedCount,
+              });
             }
           }
         } else {
@@ -270,12 +305,16 @@ exports.getBotResponse = async (message) => {
               metrics3.cbFailures.set(state.failures?.length || 0);
               metrics3.cbOpenedCount.set(state.openedCount || 0);
               metrics3.cbOpen.set(Date.now() < (state.openUntil || 0) ? 1 : 0);
-              metrics3.cbLastOpened.set(state.openedCount ? Math.floor((state.openUntil - CB_COOLDOWN_MS) / 1000) : 0);
+              metrics3.cbLastOpened.set(
+                state.openedCount ? Math.floor((state.openUntil - CB_COOLDOWN_MS) / 1000) : 0
+              );
             } else {
               metrics3.cbFailures.set(cb.failures.length || 0);
               metrics3.cbOpenedCount.set(cb.openedCount || 0);
               metrics3.cbOpen.set(Date.now() < (cb.openUntil || 0) ? 1 : 0);
-              metrics3.cbLastOpened.set(cb.openedCount ? Math.floor((cb.openUntil - CB_COOLDOWN_MS) / 1000) : 0);
+              metrics3.cbLastOpened.set(
+                cb.openedCount ? Math.floor((cb.openUntil - CB_COOLDOWN_MS) / 1000) : 0
+              );
             }
           } catch (e) {
             // ignore metric update errors
@@ -287,13 +326,20 @@ exports.getBotResponse = async (message) => {
     }
 
     // If configured to use Hugging Face, prefer that (feature flag)
-    if (String(process.env.USE_HUGGINGFACE || '').toLowerCase() === 'true' && typeof getHuggingFaceResponse === 'function') {
+    if (
+      String(process.env.USE_HUGGINGFACE || '').toLowerCase() === 'true' &&
+      typeof getHuggingFaceResponse === 'function'
+    ) {
       // instrument Hugging Face
       const metricsHf = ensureMetrics();
       let stopHf;
       try {
         const modelLabel = process.env.HUGGINGFACE_MODEL || 'facebook/blenderbot-400M-distill';
-        if (metricsHf && metricsHf.adapterLatency) stopHf = metricsHf.adapterLatency.startTimer({ adapter: 'huggingface', model: modelLabel });
+        if (metricsHf && metricsHf.adapterLatency)
+          stopHf = metricsHf.adapterLatency.startTimer({
+            adapter: 'huggingface',
+            model: modelLabel,
+          });
         if (!getHuggingFaceResponse) throw new Error('huggingface adapter not available');
         const r = await callWithTimeout(() => getHuggingFaceResponse(message));
         if (stopHf) stopHf();
@@ -301,7 +347,8 @@ exports.getBotResponse = async (message) => {
       } catch (err) {
         if (stopHf) stopHf();
         const modelLabel = process.env.HUGGINGFACE_MODEL || 'facebook/blenderbot-400M-distill';
-        if (metricsHf && metricsHf.adapterErrors) metricsHf.adapterErrors.inc({ adapter: 'huggingface', model: modelLabel });
+        if (metricsHf && metricsHf.adapterErrors)
+          metricsHf.adapterErrors.inc({ adapter: 'huggingface', model: modelLabel });
         throw err;
       }
     }
@@ -316,7 +363,8 @@ exports.getBotResponse = async (message) => {
     let stopCl;
     try {
       const modelLabel = process.env.CLAUDE_MODEL || 'default';
-      if (metricsCl && metricsCl.adapterLatency) stopCl = metricsCl.adapterLatency.startTimer({ adapter: 'claude', model: modelLabel });
+      if (metricsCl && metricsCl.adapterLatency)
+        stopCl = metricsCl.adapterLatency.startTimer({ adapter: 'claude', model: modelLabel });
       if (!getClaudeResponse) throw new Error('claude adapter not available');
       const r = await callWithTimeout(() => getClaudeResponse(message));
       if (stopCl) stopCl();
@@ -325,7 +373,8 @@ exports.getBotResponse = async (message) => {
     } catch (err) {
       if (stopCl) stopCl();
       const modelLabel = process.env.CLAUDE_MODEL || 'default';
-      if (metricsCl && metricsCl.adapterErrors) metricsCl.adapterErrors.inc({ adapter: 'claude', model: modelLabel });
+      if (metricsCl && metricsCl.adapterErrors)
+        metricsCl.adapterErrors.inc({ adapter: 'claude', model: modelLabel });
       // fallback to computeResponse and cache result
       const fallback = computeResponse(message);
       setCachedResponse(cacheKey, fallback);

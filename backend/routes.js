@@ -9,13 +9,17 @@ router.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const messageValidators = [
   body('message')
-    .exists().withMessage('message is required')
+    .exists()
+    .withMessage('message is required')
     .bail()
-    .isString().withMessage('message must be a string')
+    .isString()
+    .withMessage('message must be a string')
     .bail()
     .trim()
-    .notEmpty().withMessage('message cannot be empty')
-    .isLength({ max: 2000 }).withMessage('message is too long'),
+    .notEmpty()
+    .withMessage('message cannot be empty')
+    .isLength({ max: 2000 })
+    .withMessage('message is too long'),
 ];
 
 function handleValidation(req, res, next) {

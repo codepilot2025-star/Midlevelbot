@@ -27,7 +27,9 @@ describe('POST /api/chat', () => {
   test('returns 500 when bot throws', async () => {
     // mock bot.getBotResponse to throw
     const orig = bot.getBotResponse;
-    bot.getBotResponse = async () => { throw new Error('boom'); };
+    bot.getBotResponse = async () => {
+      throw new Error('boom');
+    };
 
     const res = await request(app)
       .post('/api/chat')

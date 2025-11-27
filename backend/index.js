@@ -52,7 +52,8 @@ const apiLimiter = rateLimit({
   max: RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res) => res.status(429).json({ error: 'Too many requests, please try again later.' }),
+  handler: (req, res) =>
+    res.status(429).json({ error: 'Too many requests, please try again later.' }),
 });
 
 // API routes mounted at /api with rate limiting
@@ -81,7 +82,8 @@ try {
 
 app.get('/metrics', async (req, res) => {
   // If prom-client installed and OPENAI_CB_METRICS enabled, return Prometheus text format
-  const useProm = promClient && String(process.env.OPENAI_CB_METRICS || 'true').toLowerCase() === 'true';
+  const useProm =
+    promClient && String(process.env.OPENAI_CB_METRICS || 'true').toLowerCase() === 'true';
   // If the client explicitly asks for JSON, return the simple JSON metrics for compatibility/testing
   const wantsJson = req.headers.accept && req.headers.accept.includes('application/json');
   if (useProm) {
@@ -119,7 +121,8 @@ app.get('/ready', async (req, res) => {
   // If Redis is configured, check connectivity via the circuit store's redis client
   try {
     const circuit = require('./circuit');
-    const client = circuit && typeof circuit._redisClient === 'function' ? circuit._redisClient() : null;
+    const client =
+      circuit && typeof circuit._redisClient === 'function' ? circuit._redisClient() : null;
     if (client) {
       // ioredis exposes a 'ping' method
       try {
