@@ -36,13 +36,22 @@
     "node-fetch": "^2.6.7",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.8",
-    "supertest": "^6.3.4"
+    "supertest": "^6.3.4",
+    "jest-junit": "^13.0.0",
+    "nock": "^13.3.0"
   },
   "jest": {
     "testEnvironment": "node",
     "roots": [
       "<rootDir>"
-    ]
+    ],
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage"
+  },
+  "jest-junit": {
+    "output": "./reports/junit.xml",
+    "suiteName": "backend-tests"
   },
   "description": "This folder contains the backend for the Midlevelbot project.",
   "keywords": [],
