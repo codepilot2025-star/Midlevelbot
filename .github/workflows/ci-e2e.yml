@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir -p backend/reports || true
           # ensure test reporter can write
-          JEST_JUNIT_OUTPUT=backend/reports/junit.xml npm --prefix backend test --silent
+          JEST_JUNIT_OUTPUT=backend/reports/junit.xml npm --prefix backend test --silent -- --coverage --coverageDirectory=backend/coverage
 
       - name: Frontend - install & test
         run: |
@@ -47,3 +47,8 @@ jobs:
           path: |
             backend/reports/junit.xml
             reports/**
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
